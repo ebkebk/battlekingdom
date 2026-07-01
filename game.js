@@ -105,7 +105,7 @@ async startBattle(enemy){await this.fade(()=>this.setupBattle(enemy),'戦闘開�
 
  delay(ms){return new Promise(res=>setTimeout(res,ms))}
  async playerAttack(){this.player_turn=false;let action='カワグチくんの攻撃！';let dmg=Math.max(1,rnd(this.atk-3,this.atk+6));if(this.enemy_defending)dmg=Math.max(1,Math.floor(dmg/2));this.enemy_defending=false;let gain=10;if(this.accessory?.id==='special_ring')gain=Math.floor(gain*(1+this.accessoryLevelValue(this.accessory)/100));this.special=Math.min(100,this.special+gain);this.log(action);this.drawAll();await this.delay(600);this.shake(360);await this.delay(600);this.enemy_hp-=dmg;if(this.enemy_hp<=0)return this.winBattle(`${action}\n${dmg}ダメージ！`);this.log(`${dmg}ダメージ！`);this.drawAll();setTimeout(()=>this.enemyTurn(),800)}
- async playerSpecial(){if(this.special<100){this.log('必殺ゲージが足りない。\nカワグチくんのターン。');this.drawAll();return}this.player_turn=false;this.special=0;let action='エクシオブレイカー！！';let dmg=rnd(45,65)+this.level*2;if(this.enemy_defending)dmg=Math.max(1,Math.floor(dmg/2));this.enemy_defending=false;this.log(action);this.drawAll();await this.delay(600);this.shake(420);await this.delay(650);this.enemy_hp-=dmg;if(this.enemy_hp<=0)return this.winBattle(`${action}\n${dmg}ダメージ！`);this.log(`${dmg}ダメージ！`);this.drawAll();setTimeout(()=>this.enemyTurn(),900)}
+ async playerSpecial(){if(this.special<100){this.log('必殺ゲージが足りない。');this.drawAll();return}this.player_turn=false;this.special=0;let action='エクシオブレイカー！！';let dmg=rnd(45,65)+this.level*2;if(this.enemy_defending)dmg=Math.max(1,Math.floor(dmg/2));this.enemy_defending=false;this.log(action);this.drawAll();await this.delay(600);this.shake(420);await this.delay(650);this.enemy_hp-=dmg;if(this.enemy_hp<=0)return this.winBattle(`${action}\n${dmg}ダメージ！`);this.log(`${dmg}ダメージ！`);this.drawAll();setTimeout(()=>this.enemyTurn(),900)}
  playerDefend(){this.player_turn=false;this.player_guard=true;this.enemy_defending=false;this.special=Math.min(100,this.special+5);this.log('ぼうぎょ！\nこのターンのダメージを半減する。');this.drawAll();setTimeout(()=>this.enemyTurn(),800)}
  showBattleItems(){this.openModal('戦闘アイテム',[[`回復薬 x${this.potions}`,'kaihukuyaku',()=>this.usePotion()], [`爆弾 x${this.bombs}`,'bomb',()=>this.useBomb()], [`煙玉 x${this.smokes}`,'kemuridama',()=>this.useSmoke()]],'閉じる')}
  async usePotion(){if(this.potions<=0)return;this.closeModal();this.potions--;let old=this.hp;this.player_turn=false;this.log('回復薬を使った。');this.drawAll();await this.delay(600);this.hp=Math.min(this.max_hp,this.hp+50);this.log(`HPが${this.hp-old}回復した。`);this.drawAll();setTimeout(()=>this.enemyTurn(),800)}
@@ -192,8 +192,37 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
  enhanceItem(i){let c=this.enhanceCost(i);if(this.gold<c)return this.notEnough();this.gold-=c;i.enhance=(i.enhance||0)+1;this.closeModal();this.log(`${this.enhancedName(i)}に強化した。`);this.drawAll()}
  showItems(){this.openModal('アイテム',[[`回復薬 x${this.potions}\n${this.itemDesc(null,'potion')}`,'kaihukuyaku',()=>{}],[`爆弾 x${this.bombs}\n${this.itemDesc(null,'bomb')}`,'bomb',()=>{}],[`煙玉 x${this.smokes}\n${this.itemDesc(null,'smoke')}`,'kemuridama',()=>{}]],'閉じる')}
  showEquipment(){let rows=[];this.inventory_weapons.forEach(i=>rows.push([`武器 ${this.equipNowHtml(i)} ${this.enhancedName(i)} / 攻撃+${this.itemPower(i)}<br>${i.desc}`,'sword',()=>{this.weapon=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_armors.forEach(i=>rows.push([`防具 ${this.equipNowHtml(i)} ${this.enhancedName(i)} / 防御+${this.itemPower(i)}<br>${i.desc}`,'armor',()=>{this.armor=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_accessories.forEach(i=>rows.push([`装飾 ${this.equipNowHtml(i)} ${this.enhancedName(i)} / ${i.effect}<br>${i.desc}`,'ring',()=>{this.accessory=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.openModal('装備',rows,'閉じる')}
- saveGame(){let keys=['floor','level','exp','next_exp','max_hp','hp','atk_base','def_base','special','player_direction','gold','potions','bombs','smokes','weapon','armor','accessory','inventory_weapons','inventory_armors','inventory_accessories'];let data={};keys.forEach(k=>data[k]=this[k]);localStorage.setItem(SAVE_KEY,JSON.stringify(data));this.log('セーブしました。');this.drawAll()}
- loadGame(){let raw=localStorage.getItem(SAVE_KEY);if(!raw){alert('セーブデータがありません。');return}Object.assign(this,JSON.parse(raw));this.in_battle=false;this.in_shop=false;this.enemy=null;this.game_cleared=false;this.screen_mode='game';this.newFloor();this.log('ロードしました。');this.drawAll()}
+ saveGame(){let keys=['floor','level','exp','next_exp','max_hp','hp','atk_base','def_base','special','player','player_direction','gold','potions','bombs','smokes','weapon','armor','accessory','inventory_weapons','inventory_armors','inventory_accessories','map','stairs','shop','enemies','treasures','shop_stock'];let data={};keys.forEach(k=>data[k]=this[k]);localStorage.setItem(SAVE_KEY,JSON.stringify(data));this.log('セーブしました。');this.drawAll()}
+ loadGame(){let raw=localStorage.getItem(SAVE_KEY);if(!raw){alert('セーブデータがありません。');return}
+let data=JSON.parse(raw);
+Object.assign(this,data);
+this.in_battle=false;
+this.in_shop=false;
+this.shop_confirm=null;
+this.enemy=null;
+this.enemy_hp=0;
+this.enemy_max_hp=0;
+this.enemy_atk=0;
+this.player_turn=true;
+this.battle_result_mode=false;
+this.defeated_enemy=null;
+this.pending_result_text='';
+this.player_guard=false;
+this.player_skip_turn=false;
+this.enemy_turn_count=0;
+this.enemy_defending=false;
+this.game_cleared=false;
+this.screen_mode='game';
+
+// 古いセーブデータ対策：マップ情報がない場合だけ現在階を作り直す
+if(!this.map||!this.stairs||!this.player){
+  this.newFloor();
+  this.log('古いセーブデータを読み込みました。現在階を再生成しました。');
+  return;
+}
+
+this.log('ロードしました。');
+this.drawAll()}
  submitPassword(){let p=(this.passwordInput?.value||'').trim();if(p===PASSWORD){sessionStorage.setItem('exio_pw_ok','1');this.passwordOk=true;this.screen_mode='title';if(this.passwordInput)this.passwordInput.value='';this.drawAll()}else{if(this.passwordError)this.passwordError.textContent='パスワードが違います。';if(this.passwordInput){this.passwordInput.select();this.passwordInput.focus();}}}
  titleConfirm(){if(this.screen_mode==='password'){this.submitPassword();return}if(this.title_index===0){this.initState();this.newFloor();this.screen_mode='opening';this.opening_index=0;this.drawAll()}else this.loadGame()}
  advanceOpening(){this.opening_index++;if(this.opening_index>=4){this.fade(()=>{this.screen_mode='game';this.log('ラーズビル攻略開始。最上階を目指せ。')},this.floorName(),'探索開始',420);return}this.drawAll()}
