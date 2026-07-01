@@ -35,7 +35,7 @@ const OPENING=[
 '新進気鋭の若手社員\n「カワグチくん」は、\n\n昇給を勝ち取るため、\nラーズビルへと足を踏み入れた。',
 '立ちはだかる社員たちを倒し、\n装備を集め、\nラーズビル最上階を目指せ。\n\n社長イデランを倒し、\n昇給を勝ち取れ！'];
 const assetNames=['op_title','opev_scene','ed_scene','gameover_screen','floor','wall','chest','stairs','shop','player_down','player_left','player_right','player_up','armor','bomb','gold','kaihukuyaku','kemuridama','ring','sword','abe_map','aya_map','haya_map','ide2_map','jun_map','kane_map','kuri2_map','kuri_map','mae_map','mura_map','tani_map','abe_battle','aya_battle','haya_battle','ide_battle','ide2_battle','jun_battle','kane_battle','kuri2_battle','kuri_battle','mae_battle','mura_battle','shop_battle','tani_battle'];
-const assetPath=k=>k.includes('battle')?`assets/enemy/${k}.png`:['op_title','opev_scene','ed_scene','gameover_screen'].includes(k)?`assets/event/${k}.png`:['armor','bomb','gold','kaihukuyaku','kemuridama','ring','sword'].includes(k)?`assets/icon/${k}.png`:`assets/map/${k}.png`;
+const assetPath = k => `${k}.png`;
 const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a, choice=a=>a[Math.floor(Math.random()*a.length)], clone=o=>o?JSON.parse(JSON.stringify(o)):null;
 
 class Game{
