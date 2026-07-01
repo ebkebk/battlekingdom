@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>EXIO ROGUELIKE Ver.3 Web</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="gameWrap">
+    <canvas id="gameCanvas" width="520" height="760"></canvas>
+    <section id="hud">
+      <div id="status"></div>
+      <div id="log"></div>
+      <div id="commands"></div>
+      <div id="bottomControls">
+        <div id="menuButtons"></div>
+        <div id="dpad">
+          <button data-move="0,-1">↑</button>
+          <button data-move="-1,0">←</button>
+          <button data-move="1,0">→</button>
+          <button data-move="0,1">↓</button>
+        </div>
+      </div>
+    </section>
+    <div id="passwordPanel" hidden>
+      <div class="pwCard">
+        <div class="pwTitle">PASSWORD</div>
+        <div class="pwText">パスワードを入力してください</div>
+        <input id="passwordInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0618" />
+        <button id="passwordButton">決定</button>
+        <div id="passwordError"></div>
+      </div>
+    </div>
+    <div id="modal" hidden></div>
+    <div id="fade" hidden><div><b id="fadeTitle"></b><span id="fadeSub"></span></div></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

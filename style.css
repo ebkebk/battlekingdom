@@ -1,0 +1,104 @@
+*{box-sizing:border-box} html,body{margin:0;background:#050505;color:#fff;font-family:"MS Gothic","Yu Gothic",monospace;touch-action:manipulation;user-select:none}#gameWrap{position:relative;width:min(100vw,520px);height:min(100vh,760px);max-height:760px;margin:0 auto;background:#111;overflow:hidden}canvas{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:auto}#hud{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}#status{position:absolute;left:20px;top:325px;width:480px;height:55px;font-size:14px;white-space:pre-line;line-height:1.35}#log{position:absolute;left:20px;top:385px;width:480px;height:95px;background:#000;border:2px ridge #777;padding:8px 10px;font-size:15px;white-space:pre-line;line-height:1.35;overflow:hidden}#commands{position:absolute;left:20px;top:490px;width:480px;height:105px;pointer-events:auto}#bottomControls{position:absolute;left:20px;top:600px;width:480px;height:135px;pointer-events:auto}button{font-family:inherit;background:#333;color:white;border:1px solid #777;border-radius:4px;font-weight:bold;cursor:pointer}button:active{background:#555}button:disabled{color:#888;background:#222}#menuButtons{position:absolute;left:0;top:0;width:165px;height:135px;display:flex;flex-direction:column;gap:6px}#menuButtons button{height:28px;font-size:14px}#dpad{position:absolute;right:0;top:0;width:245px;height:135px}#dpad button{position:absolute;width:64px;height:38px;font-size:24px}#dpad button:nth-child(1){left:90px;top:0}#dpad button:nth-child(2){left:20px;top:48px}#dpad button:nth-child(3){left:160px;top:48px}#dpad button:nth-child(4){left:90px;top:96px}.cmdGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cmdGrid button{height:50px;font-size:18px}.battleLog{background:#000;border:1px ridge #777;padding:8px;height:86px;white-space:pre-line;margin-bottom:8px}.shopGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.shopGrid button{height:52px;font-size:18px}.wideBtn{display:block;margin:14px auto 0;width:180px;height:48px}.exploreEquip{font-size:13px;line-height:1.45}.exploreHint{color:#ccc;font-size:12px;margin-top:2px}.fullScreenMode #status,.fullScreenMode #log,.fullScreenMode #commands,.fullScreenMode #bottomControls{display:none}.battleMode #status,.battleMode #log,.battleMode #bottomControls{display:none}.battleMode #commands{top:430px;height:310px}.shopMode #status,.shopMode #log,.shopMode #bottomControls{display:none}.shopMode #commands{top:430px;height:310px}#modal{position:absolute;left:24px;right:24px;top:60px;bottom:60px;background:#080808;border:2px solid #aaa;z-index:5;padding:14px;overflow:auto;pointer-events:auto}#modal h2{margin:0 0 12px;text-align:center;color:#ffca28}.rowBtn{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:6px 0;padding:6px;text-align:left}.rowBtn img{width:28px;height:28px;object-fit:contain}.smallText{font-size:13px;color:#ddd;white-space:pre-line}.modalActions{display:flex;gap:8px;justify-content:center;margin-top:12px}.modalActions button{min-width:120px;height:40px}#fade{position:absolute;inset:0;background:#000;z-index:10;display:flex;align-items:center;justify-content:center;text-align:center;opacity:0;transition:opacity .22s}#fade div{display:flex;flex-direction:column;gap:8px}#fade b{font-size:30px}#fade span{color:#80deea;font-size:15px}@media(max-width:520px){#gameWrap{height:100vh}#status,#log,#commands,#bottomControls{transform-origin:top left;left:calc(20px * var(--s,1));}button{min-height:36px}}
+
+#passwordPanel{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);pointer-events:auto}
+#passwordPanel[hidden]{display:none}
+.pwCard{width:360px;max-width:86%;background:#080808;border:2px solid #fff;padding:24px 18px;text-align:center;box-shadow:0 0 20px #000}
+.pwTitle{font-size:34px;font-weight:bold;color:#ffca28;margin-bottom:16px}
+.pwText{font-size:15px;margin-bottom:14px}
+#passwordInput{width:220px;height:52px;text-align:center;font-size:30px;font-family:inherit;background:#111;color:#fff;border:2px solid #aaa;border-radius:4px;user-select:text}
+#passwordInput:focus{outline:2px solid #ffca28}
+#passwordButton{display:block;width:160px;height:44px;margin:16px auto 0;font-size:18px}
+#passwordError{min-height:22px;margin-top:10px;color:#ff8a80;font-size:14px}
+
+/* FIX: hidden overlays were still intercepting taps/clicks on some browsers */
+[hidden]{display:none !important;}
+#modal[hidden],#fade[hidden],#passwordPanel[hidden]{display:none !important;pointer-events:none !important;}
+#fade[hidden]{z-index:-1;}
+#hud{z-index:2;}
+#bottomControls,#commands,#menuButtons,#dpad,#menuButtons button,#dpad button{pointer-events:auto;}
+
+
+@keyframes battleShake{
+  0%{transform:translate(0,0)} 15%{transform:translate(-8px,3px)} 30%{transform:translate(7px,-3px)} 45%{transform:translate(-6px,-2px)} 60%{transform:translate(6px,3px)} 75%{transform:translate(-3px,2px)} 100%{transform:translate(0,0)}
+}
+canvas.shake{animation:battleShake .28s linear;}
+.confirmBox{display:flex;align-items:center;gap:12px;justify-content:center;min-height:90px;border:1px solid #666;background:#000;margin:10px 0 14px;padding:12px;text-align:left;white-space:normal}
+.confirmBox img{width:42px;height:42px;object-fit:contain;image-rendering:auto}
+.confirmBox p{margin:0;font-size:15px;line-height:1.6}
+
+/* detail/compare windows */
+#modal{border-radius:8px;box-shadow:0 0 0 1px #333,0 12px 40px #000;}
+.confirmTop{display:flex;align-items:center;justify-content:center;gap:16px;margin:8px 0 14px;text-align:left}
+.confirmTop img{width:42px;height:42px;object-fit:contain}
+.confirmQuestion{font-size:18px;line-height:1.45;white-space:pre-line}
+.descBox,.compareBox{border:1px solid #888;background:#050505;margin:10px 8px;padding:10px 12px;font-size:14px;line-height:1.55;text-align:left;white-space:pre-line}
+.descBox b,.compareTitle{display:block;color:#ffca28;margin-bottom:4px;font-weight:bold}
+.moneyLine{text-align:right;color:#80deea;margin:8px 12px 0;font-size:14px}
+.rowBtn span{white-space:pre-line;line-height:1.45}
+
+/* mobile portrait fit: keep current UI, make it fill iPhone width without Safari text-size tweaking */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+@media (max-width: 520px) and (orientation: portrait){
+  html,body{width:100%;min-height:100%;overflow-x:hidden;background:#050505;}
+  body{display:block;}
+  #gameWrap{
+    width:520px;
+    height:760px;
+    max-height:none;
+    margin:0;
+    transform-origin:top left;
+    transform:scale(calc(100vw / 520));
+    background:#111;
+  }
+  #status{font-size:18px;line-height:1.32;}
+  #log{font-size:19px;line-height:1.35;padding:10px 12px;}
+  .battleLog{font-size:19px;line-height:1.35;height:104px;padding:10px 12px;}
+  .exploreEquip{font-size:17px;line-height:1.45;}
+  .exploreHint{font-size:15px;line-height:1.35;}
+  #menuButtons button{height:36px;font-size:18px;}
+  #dpad button{width:76px;height:48px;font-size:30px;}
+  #dpad button:nth-child(1){left:84px;top:0}
+  #dpad button:nth-child(2){left:0;top:54px}
+  #dpad button:nth-child(3){left:168px;top:54px}
+  #dpad button:nth-child(4){left:84px;top:108px}
+  .cmdGrid button{height:60px;font-size:22px;}
+  .shopGrid button{height:60px;font-size:21px;}
+  .wideBtn{height:54px;font-size:19px;}
+  #commands{font-size:19px;}
+  #modal{font-size:18px;}
+  #modal h2{font-size:28px;}
+  .rowBtn{min-height:58px;font-size:18px;}
+  .rowBtn img{width:34px;height:34px;}
+  .smallText,.descBox,.compareBox,.moneyLine{font-size:17px;line-height:1.5;}
+  .confirmQuestion{font-size:21px;}
+  .modalActions button{height:48px;font-size:18px;}
+}
+
+
+/* enemy attack: shake the visible game screen + HUD together */
+@keyframes screenShake{
+  0%{transform:translate(0,0)}
+  12%{transform:translate(-10px,4px)}
+  24%{transform:translate(9px,-4px)}
+  36%{transform:translate(-8px,-3px)}
+  48%{transform:translate(8px,4px)}
+  60%{transform:translate(-6px,3px)}
+  72%{transform:translate(5px,-2px)}
+  84%{transform:translate(-3px,1px)}
+  100%{transform:translate(0,0)}
+}
+#gameCanvas.screenShake,#hud.screenShake{animation:screenShake .28s linear;}
+
+
+input[type="password"]{
+ -webkit-text-security: disc;
+}
+input::placeholder{color:transparent;}
+#eventText,.event-text,.dialog,.message.event{
+ font-size:1.18em !important;
+ line-height:1.45;
+}
+.item-description,.equip-description,.shop-description,.desc{
+ font-size:1.12em !important;
+ line-height:1.4;
+}
