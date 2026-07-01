@@ -39,39 +39,53 @@ canvas.shake{animation:battleShake .28s linear;}
 /* mobile portrait fit: keep current UI, make it fill iPhone width without Safari text-size tweaking */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 @media (max-width: 520px) and (orientation: portrait){
-  html,body{width:100%;min-height:100%;overflow-x:hidden;background:#050505;}
-  body{display:block;}
+  html,body{
+    width:100%;
+    min-height:100%;
+    overflow-x:hidden;
+    background:#050505;
+  }
+
   #gameWrap{
-    width:520px;
-    height:760px;
-    max-height:none;
-    margin:0;
-    transform-origin:top left;
-    transform:scale(calc(100vw / 520));
+    width:100vw;
+    max-width:520px;
+    height:auto;
+    aspect-ratio:520 / 760;
+    margin:0 auto;
+    transform:none;
     background:#111;
   }
-  #status{font-size:18px;line-height:1.32;}
-  #log{font-size:19px;line-height:1.35;padding:10px 12px;}
-  .battleLog{font-size:19px;line-height:1.35;height:104px;padding:10px 12px;}
-  .exploreEquip{font-size:17px;line-height:1.45;}
-  .exploreHint{font-size:15px;line-height:1.35;}
-  #menuButtons button{height:36px;font-size:18px;}
-  #dpad button{width:76px;height:48px;font-size:30px;}
+
+  canvas,
+  #hud{
+    width:100%;
+    height:100%;
+  }
+
+  #status{font-size:16px;line-height:1.32;}
+  #log{font-size:17px;line-height:1.35;padding:10px 12px;}
+  .battleLog{font-size:17px;line-height:1.35;height:104px;padding:10px 12px;}
+  .exploreEquip{font-size:16px;line-height:1.45;}
+  .exploreHint{font-size:14px;line-height:1.35;}
+
+  #menuButtons button{height:36px;font-size:16px;}
+  #dpad button{width:76px;height:48px;font-size:26px;}
   #dpad button:nth-child(1){left:84px;top:0}
   #dpad button:nth-child(2){left:0;top:54px}
   #dpad button:nth-child(3){left:168px;top:54px}
   #dpad button:nth-child(4){left:84px;top:108px}
-  .cmdGrid button{height:60px;font-size:22px;}
-  .shopGrid button{height:60px;font-size:21px;}
-  .wideBtn{height:54px;font-size:19px;}
-  #commands{font-size:19px;}
-  #modal{font-size:18px;}
-  #modal h2{font-size:28px;}
-  .rowBtn{min-height:58px;font-size:18px;}
+
+  .cmdGrid button{height:60px;font-size:18px;}
+  .shopGrid button{height:60px;font-size:18px;}
+  .wideBtn{height:54px;font-size:18px;}
+  #commands{font-size:17px;}
+  #modal{font-size:17px;}
+  #modal h2{font-size:26px;}
+  .rowBtn{min-height:58px;font-size:17px;}
   .rowBtn img{width:34px;height:34px;}
-  .smallText,.descBox,.compareBox,.moneyLine{font-size:17px;line-height:1.5;}
-  .confirmQuestion{font-size:21px;}
-  .modalActions button{height:48px;font-size:18px;}
+  .smallText,.descBox,.compareBox,.moneyLine{font-size:16px;line-height:1.5;}
+  .confirmQuestion{font-size:20px;}
+  .modalActions button{height:48px;font-size:17px;}
 }
 
 
