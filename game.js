@@ -131,15 +131,34 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
  itemDesc(item,kind){if(kind==='potion')return 'HPを50回復する。戦闘中に使える基本の回復アイテム。';if(kind==='bomb')return '敵に固定で60ダメージを与える。強敵への切り札。';if(kind==='smoke')return '戦闘から逃げる。逃げられない場面では失敗する。';return item?.desc||''}
  itemKind(item){if(!item)return '';if(item.atk!==undefined)return 'weapon';if(item.def!==undefined)return 'armor';return 'accessory'}
  itemPower(item){if(!item)return 0;if(item.atk!==undefined)return item.atk+this.enhanceBonus(item);if(item.def!==undefined)return item.def+this.enhanceBonus(item);if(item.id==='power_ring')return this.accessoryLevelValue(item);if(item.id==='special_ring')return this.accessoryLevelValue(item);if(item.id==='guard_ring')return this.accessoryLevelValue(item);if(item.id==='heal_ring')return this.accessoryLevelValue(item);return 0}
+ signedHtml(v,unit=''){
+   const n=Number(v)||0;
+   const color=n>0?'#66BB6A':n<0?'#EF5350':'#ffffff';
+   const sign=n>0?'+':'';
+   return `<span style="color:${color};font-weight:bold;">${sign}${n}${unit}</span>`;
+ }
+ coloredNameHtml(item){
+   const name=this.enhancedName(item);
+   return name.replace(/([+＋]\d+)/g,'<span style="color:#66BB6A;font-weight:bold;">$1</span>');
+ }
+ equipNowHtml(item){
+   return (item===this.weapon||item===this.armor||item===this.accessory)?'<span style="color:#4DD0E1;font-weight:bold;">装備中</span>':'';
+ }
  compareHtml(item,kind,mode='buy'){
-   if(kind==='weapon'){let cur=this.weapon?this.itemPower(this.weapon):0, nxt=this.itemPower(item)+(mode==='enhance'?2:0);return `<div class="compareTitle">装備比較</div><div>攻撃</div><div>${cur>=0?'+':''}${cur}　→　${nxt>=0?'+':''}${nxt}</div>`}
-   if(kind==='armor'){let cur=this.armor?this.itemPower(this.armor):0, nxt=this.itemPower(item)+(mode==='enhance'?2:0);return `<div class="compareTitle">装備比較</div><div>防御</div><div>${cur>=0?'+':''}${cur}　→　${nxt>=0?'+':''}${nxt}</div>`}
+   if(kind==='weapon'){
+     let cur=this.weapon?this.itemPower(this.weapon):0, nxt=this.itemPower(item)+(mode==='enhance'?2:0);
+     return `<div class="compareTitle">装備比較</div><div>攻撃</div><div>${this.signedHtml(cur)}　→　${this.signedHtml(nxt)}</div>`
+   }
+   if(kind==='armor'){
+     let cur=this.armor?this.itemPower(this.armor):0, nxt=this.itemPower(item)+(mode==='enhance'?2:0);
+     return `<div class="compareTitle">装備比較</div><div>防御</div><div>${this.signedHtml(cur)}　→　${this.signedHtml(nxt)}</div>`
+   }
    if(kind==='accessory'){
      let label=item.id==='power_ring'?'攻撃':item.id==='special_ring'?'必殺ゲージ':item.id==='guard_ring'?'被ダメージ軽減':'毎ターン回復';
      let cur=(this.accessory&&this.accessory.id===item.id)?this.itemPower(this.accessory):0;
      let nxt=this.itemPower(item)+(mode==='enhance'?(item.id==='special_ring'?10:item.id==='heal_ring'?3:2):0);
      let unit=item.id==='special_ring'?'%':'';
-     return `<div class="compareTitle">効果比較</div><div>${label}</div><div>${cur}${unit}　→　${nxt}${unit}</div>`
+     return `<div class="compareTitle">効果比較</div><div>${label}</div><div>${this.signedHtml(cur,unit)}　→　${this.signedHtml(nxt,unit)}</div>`
    }
    return ''
  }
@@ -161,18 +180,22 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
  showSell(){let rows=[];this.inventory_weapons.filter(i=>i!==this.weapon).forEach(i=>rows.push([`${this.enhancedName(i)} ${Math.floor(this.itemPrice(i,'weapon')*.45)}G\n${i.desc}`,'sword',()=>this.confirmSell(i,'weapon')]));this.inventory_armors.filter(i=>i!==this.armor).forEach(i=>rows.push([`${this.enhancedName(i)} ${Math.floor(this.itemPrice(i,'armor')*.45)}G\n${i.desc}`,'armor',()=>this.confirmSell(i,'armor')]));this.inventory_accessories.filter(i=>i!==this.accessory).forEach(i=>rows.push([`${this.enhancedName(i)} ${Math.floor(this.itemPrice(i,'accessory')*.45)}G\n${i.desc}`,'ring',()=>this.confirmSell(i,'accessory')]));this.openModal('売る',rows.length?rows:[['売れるものがない','gold',()=>{}]],'戻る')}
  confirmSell(item,kind){let price=Math.floor(this.itemPrice(item,kind)*.45);this.confirmShop('売却確認',item,kind,price,()=>this.sell(item,kind),'sell')}
  sell(item,kind){let price=Math.floor(this.itemPrice(item,kind)*.45);this.gold+=price;if(kind==='weapon')this.inventory_weapons=this.inventory_weapons.filter(i=>i!==item);if(kind==='armor')this.inventory_armors=this.inventory_armors.filter(i=>i!==item);if(kind==='accessory')this.inventory_accessories=this.inventory_accessories.filter(i=>i!==item);this.closeModal();this.log(`${this.enhancedName(item)}を売った。`);this.drawAll()}
- showEnhance(){let rows=[];[...this.inventory_weapons,...this.inventory_armors,...this.inventory_accessories].forEach(i=>{let kind=this.itemKind(i);let stat=kind==='weapon'?`現在 強化 +${this.enhanceLevel(i)*2}　→　強化 +${this.enhanceLevel(i)*2+2}`:kind==='armor'?`現在 強化 +${this.enhanceLevel(i)*2}　→　強化 +${this.enhanceLevel(i)*2+2}`:`現在 ${this.itemPower(i)}　→　強化後`;rows.push([`${this.enhancedName(i)}　${i===this.weapon||i===this.armor||i===this.accessory?'装備中　':''}${this.enhanceCost(i)}G\n${stat}\n${i.desc}`,i.icon,()=>this.confirmEnhance(i)])});this.openModal('強化',rows,'戻る')}
+ showEnhance(){let rows=[];[...this.inventory_weapons,...this.inventory_armors,...this.inventory_accessories].forEach(i=>{
+   const equipped=this.equipNowHtml(i);
+   const equippedText=equipped?`　${equipped}`:'';
+   rows.push([`${this.coloredNameHtml(i)}${equippedText}　${this.enhanceCost(i)}G<br>${i.desc}`,i.icon,()=>this.confirmEnhance(i)])
+ });this.openModal('強化',rows,'戻る')}
  enhanceCost(i){return 80+(this.enhanceLevel(i)+1)*70+(i.tier||1)*30}
  confirmEnhance(i){let c=this.enhanceCost(i);let kind=this.itemKind(i);this.confirmShop('強化確認',i,kind,c,()=>this.enhanceItem(i),'enhance')}
  enhanceItem(i){let c=this.enhanceCost(i);if(this.gold<c)return this.notEnough();this.gold-=c;i.enhance=(i.enhance||0)+1;this.closeModal();this.log(`${this.enhancedName(i)}に強化した。`);this.drawAll()}
  showItems(){this.openModal('アイテム',[[`回復薬 x${this.potions}\n${this.itemDesc(null,'potion')}`,'kaihukuyaku',()=>{}],[`爆弾 x${this.bombs}\n${this.itemDesc(null,'bomb')}`,'bomb',()=>{}],[`煙玉 x${this.smokes}\n${this.itemDesc(null,'smoke')}`,'kemuridama',()=>{}]],'閉じる')}
- showEquipment(){let rows=[];this.inventory_weapons.forEach(i=>rows.push([`武器 ${i===this.weapon?'装備中 ':''}${this.enhancedName(i)} / 攻撃+${this.itemPower(i)}\n${i.desc}`,'sword',()=>{this.weapon=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_armors.forEach(i=>rows.push([`防具 ${i===this.armor?'装備中 ':''}${this.enhancedName(i)} / 防御+${this.itemPower(i)}\n${i.desc}`,'armor',()=>{this.armor=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_accessories.forEach(i=>rows.push([`装飾 ${i===this.accessory?'装備中 ':''}${this.enhancedName(i)} / ${i.effect}\n${i.desc}`,'ring',()=>{this.accessory=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.openModal('装備',rows,'閉じる')}
+ showEquipment(){let rows=[];this.inventory_weapons.forEach(i=>rows.push([`武器 ${this.equipNowHtml(i)} ${this.coloredNameHtml(i)} / 攻撃${this.signedHtml(this.itemPower(i))}<br>${i.desc}`,'sword',()=>{this.weapon=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_armors.forEach(i=>rows.push([`防具 ${this.equipNowHtml(i)} ${this.coloredNameHtml(i)} / 防御${this.signedHtml(this.itemPower(i))}<br>${i.desc}`,'armor',()=>{this.armor=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_accessories.forEach(i=>rows.push([`装飾 ${this.equipNowHtml(i)} ${this.coloredNameHtml(i)} / ${i.effect}<br>${i.desc}`,'ring',()=>{this.accessory=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.openModal('装備',rows,'閉じる')}
  saveGame(){let keys=['floor','level','exp','next_exp','max_hp','hp','atk_base','def_base','special','player_direction','gold','potions','bombs','smokes','weapon','armor','accessory','inventory_weapons','inventory_armors','inventory_accessories'];let data={};keys.forEach(k=>data[k]=this[k]);localStorage.setItem(SAVE_KEY,JSON.stringify(data));this.log('セーブしました。');this.drawAll()}
  loadGame(){let raw=localStorage.getItem(SAVE_KEY);if(!raw){alert('セーブデータがありません。');return}Object.assign(this,JSON.parse(raw));this.in_battle=false;this.in_shop=false;this.enemy=null;this.game_cleared=false;this.screen_mode='game';this.newFloor();this.log('ロードしました。');this.drawAll()}
  submitPassword(){let p=(this.passwordInput?.value||'').trim();if(p===PASSWORD){sessionStorage.setItem('exio_pw_ok','1');this.passwordOk=true;this.screen_mode='title';if(this.passwordInput)this.passwordInput.value='';this.drawAll()}else{if(this.passwordError)this.passwordError.textContent='パスワードが違います。';if(this.passwordInput){this.passwordInput.select();this.passwordInput.focus();}}}
  titleConfirm(){if(this.screen_mode==='password'){this.submitPassword();return}if(this.title_index===0){this.initState();this.newFloor();this.screen_mode='opening';this.opening_index=0;this.drawAll()}else this.loadGame()}
  advanceOpening(){this.opening_index++;if(this.opening_index>=4){this.fade(()=>{this.screen_mode='game';this.log('ラーズビル攻略開始。最上階を目指せ。')},this.floorName(),'探索開始',420);return}this.drawAll()}
- startBossEvent(texts,next){this.event_texts=texts;this.event_index=0;this.event_next=next;this.screen_mode='boss_event';this.drawAll()} advanceBossEvent(){this.event_index++;if(this.event_index>=this.event_texts.length){let n=this.event_next;this.event_next=null;this.fade(()=>n&&n(),'', '',320);return}this.drawAll()} startIdeBattle(){this.screen_mode='game';let e=this.createEnemy({id:'ide',name:'社長イデラン',hp:220,atk:26,boss:true},this.player);this.startBattle(e)} startIde2Event(){this.startBossEvent(['なかなかやるな。\n\nだが、これで私に勝てたと\n思うなよ。','私の本当の姿を\n見せてやろう！'],()=>this.startIde2Battle())} startIde2Battle(){this.screen_mode='game';let e=this.createEnemy({id:'ide2',name:'真・魔王イデラン',hp:320,atk:32,boss:true},this.player);this.startBattle(e)} showEnding(){this.fade(()=>{this.in_battle=false;this.in_shop=false;this.enemy=null;this.game_cleared=true;this.screen_mode='ending'},'', '',360)}
+ startBossEvent(texts,next){this.event_texts=texts;this.event_index=0;this.event_next=next;this.screen_mode='boss_event';this.drawAll()} advanceBossEvent(){this.event_index++;if(this.event_index>=this.event_texts.length){let n=this.event_next;this.event_next=null;this.fade(()=>n&&n(),'', '',320);return}this.drawAll()} startIdeBattle(){this.screen_mode='game';let e=this.createEnemy({id:'ide',name:'社長イデラン',hp:220,atk:26,boss:true},this.player);this.setupBattle(e);this.log(`${e.name}が現れた！\n戦闘開始。\nカワグチくんのターン。`)} startIde2Event(){this.startBossEvent(['なかなかやるな。\n\nだが、これで私に勝てたと\n思うなよ。','私の本当の姿を\n見せてやろう！'],()=>this.startIde2Battle())} startIde2Battle(){this.screen_mode='game';let e=this.createEnemy({id:'ide2',name:'真・魔王イデラン',hp:320,atk:32,boss:true},this.player);this.setupBattle(e);this.log(`${e.name}が現れた！\n戦闘開始。\nカワグチくんのターン。`)} showEnding(){this.fade(()=>{this.in_battle=false;this.in_shop=false;this.enemy=null;this.game_cleared=true;this.screen_mode='ending'},'', '',360)}
  leftKey(){if(this.in_shop)return;if(this.screen_mode==='title')return;if(this.in_battle)return;this.move(-1,0)} rightKey(){if(this.screen_mode==='title')return;if(this.in_battle)return;this.move(1,0)} enterKey(){if(this.screen_mode==='password'||this.screen_mode==='title')return this.titleConfirm();if(this.screen_mode==='opening')return this.advanceOpening();if(this.screen_mode==='boss_event')return this.advanceBossEvent();if(this.screen_mode==='gameover'||this.screen_mode==='ending'){this.screen_mode='title';this.drawAll();return}} escKey(){if(this.in_shop){this.in_shop=false;this.drawAll()}}
  canvasClick(e){if(this.screen_mode==='password'||this.screen_mode==='title')return this.titleConfirm();if(this.screen_mode==='opening')return this.advanceOpening();if(this.screen_mode==='boss_event')return this.advanceBossEvent();if(this.screen_mode==='gameover'||this.screen_mode==='ending'){this.screen_mode='title';this.drawAll()}}
  openModal(title,rows,closeLabel){this.modal.hidden=false;this.modal.innerHTML=`<h2>${title}</h2>`;rows.forEach(([text,icon,fn])=>{let b=document.createElement('button');b.className='rowBtn';b.innerHTML=`${this.assets[icon]?`<img src="${assetPath(icon)}">`:''}<span>${text}</span>`;b.onclick=fn;this.modal.appendChild(b)});let acts=document.createElement('div');acts.className='modalActions';let close=document.createElement('button');close.textContent=closeLabel||'閉じる';close.onclick=()=>this.closeModal();acts.appendChild(close);this.modal.appendChild(acts)} closeModal(){this.modal.hidden=true;this.modal.innerHTML=''}
