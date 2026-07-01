@@ -131,15 +131,17 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
  itemDesc(item,kind){if(kind==='potion')return 'HPを50回復する。戦闘中に使える基本の回復アイテム。';if(kind==='bomb')return '敵に固定で60ダメージを与える。強敵への切り札。';if(kind==='smoke')return '戦闘から逃げる。逃げられない場面では失敗する。';return item?.desc||''}
  itemKind(item){if(!item)return '';if(item.atk!==undefined)return 'weapon';if(item.def!==undefined)return 'armor';return 'accessory'}
  itemPower(item){if(!item)return 0;if(item.atk!==undefined)return item.atk+this.enhanceBonus(item);if(item.def!==undefined)return item.def+this.enhanceBonus(item);if(item.id==='power_ring')return this.accessoryLevelValue(item);if(item.id==='special_ring')return this.accessoryLevelValue(item);if(item.id==='guard_ring')return this.accessoryLevelValue(item);if(item.id==='heal_ring')return this.accessoryLevelValue(item);return 0}
- signedHtml(v,unit=''){
-   const n=Number(v)||0;
-   const color=n>0?'#66BB6A':n<0?'#EF5350':'#ffffff';
+ compareValueHtml(cur,nxt,unit=''){
+   const c=Number(cur)||0;
+   const n=Number(nxt)||0;
+   const color=n>c?'#66BB6A':n<c?'#EF5350':'#ffffff';
    const sign=n>0?'+':'';
    return `<span style="color:${color};font-weight:bold;">${sign}${n}${unit}</span>`;
  }
- coloredNameHtml(item){
-   const name=this.enhancedName(item);
-   return name.replace(/([+＋]\d+)/g,'<span style="color:#66BB6A;font-weight:bold;">$1</span>');
+ plainSigned(v,unit=''){
+   const n=Number(v)||0;
+   const sign=n>0?'+':'';
+   return `${sign}${n}${unit}`;
  }
  equipNowHtml(item){
    return (item===this.weapon||item===this.armor||item===this.accessory)?'<span style="color:#4DD0E1;font-weight:bold;">装備中</span>':'';
@@ -147,18 +149,18 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
  compareHtml(item,kind,mode='buy'){
    if(kind==='weapon'){
      let cur=this.weapon?this.itemPower(this.weapon):0, nxt=this.itemPower(item)+(mode==='enhance'?2:0);
-     return `<div class="compareTitle">装備比較</div><div>攻撃</div><div>${this.signedHtml(cur)}　→　${this.signedHtml(nxt)}</div>`
+     return `<div class="compareTitle">装備比較</div><div>攻撃</div><div>${this.plainSigned(cur)}　→　${this.compareValueHtml(cur,nxt)}</div>`
    }
    if(kind==='armor'){
      let cur=this.armor?this.itemPower(this.armor):0, nxt=this.itemPower(item)+(mode==='enhance'?2:0);
-     return `<div class="compareTitle">装備比較</div><div>防御</div><div>${this.signedHtml(cur)}　→　${this.signedHtml(nxt)}</div>`
+     return `<div class="compareTitle">装備比較</div><div>防御</div><div>${this.plainSigned(cur)}　→　${this.compareValueHtml(cur,nxt)}</div>`
    }
    if(kind==='accessory'){
      let label=item.id==='power_ring'?'攻撃':item.id==='special_ring'?'必殺ゲージ':item.id==='guard_ring'?'被ダメージ軽減':'毎ターン回復';
      let cur=(this.accessory&&this.accessory.id===item.id)?this.itemPower(this.accessory):0;
      let nxt=this.itemPower(item)+(mode==='enhance'?(item.id==='special_ring'?10:item.id==='heal_ring'?3:2):0);
      let unit=item.id==='special_ring'?'%':'';
-     return `<div class="compareTitle">効果比較</div><div>${label}</div><div>${this.signedHtml(cur,unit)}　→　${this.signedHtml(nxt,unit)}</div>`
+     return `<div class="compareTitle">効果比較</div><div>${label}</div><div>${this.plainSigned(cur,unit)}　→　${this.compareValueHtml(cur,nxt,unit)}</div>`
    }
    return ''
  }
@@ -183,13 +185,13 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
  showEnhance(){let rows=[];[...this.inventory_weapons,...this.inventory_armors,...this.inventory_accessories].forEach(i=>{
    const equipped=this.equipNowHtml(i);
    const equippedText=equipped?`　${equipped}`:'';
-   rows.push([`${this.coloredNameHtml(i)}${equippedText}　${this.enhanceCost(i)}G<br>${i.desc}`,i.icon,()=>this.confirmEnhance(i)])
+   rows.push([`${this.enhancedName(i)}${equippedText}　${this.enhanceCost(i)}G<br>${i.desc}`,i.icon,()=>this.confirmEnhance(i)])
  });this.openModal('強化',rows,'戻る')}
  enhanceCost(i){return 80+(this.enhanceLevel(i)+1)*70+(i.tier||1)*30}
  confirmEnhance(i){let c=this.enhanceCost(i);let kind=this.itemKind(i);this.confirmShop('強化確認',i,kind,c,()=>this.enhanceItem(i),'enhance')}
  enhanceItem(i){let c=this.enhanceCost(i);if(this.gold<c)return this.notEnough();this.gold-=c;i.enhance=(i.enhance||0)+1;this.closeModal();this.log(`${this.enhancedName(i)}に強化した。`);this.drawAll()}
  showItems(){this.openModal('アイテム',[[`回復薬 x${this.potions}\n${this.itemDesc(null,'potion')}`,'kaihukuyaku',()=>{}],[`爆弾 x${this.bombs}\n${this.itemDesc(null,'bomb')}`,'bomb',()=>{}],[`煙玉 x${this.smokes}\n${this.itemDesc(null,'smoke')}`,'kemuridama',()=>{}]],'閉じる')}
- showEquipment(){let rows=[];this.inventory_weapons.forEach(i=>rows.push([`武器 ${this.equipNowHtml(i)} ${this.coloredNameHtml(i)} / 攻撃${this.signedHtml(this.itemPower(i))}<br>${i.desc}`,'sword',()=>{this.weapon=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_armors.forEach(i=>rows.push([`防具 ${this.equipNowHtml(i)} ${this.coloredNameHtml(i)} / 防御${this.signedHtml(this.itemPower(i))}<br>${i.desc}`,'armor',()=>{this.armor=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_accessories.forEach(i=>rows.push([`装飾 ${this.equipNowHtml(i)} ${this.coloredNameHtml(i)} / ${i.effect}<br>${i.desc}`,'ring',()=>{this.accessory=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.openModal('装備',rows,'閉じる')}
+ showEquipment(){let rows=[];this.inventory_weapons.forEach(i=>rows.push([`武器 ${this.equipNowHtml(i)} ${this.enhancedName(i)} / 攻撃+${this.itemPower(i)}<br>${i.desc}`,'sword',()=>{this.weapon=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_armors.forEach(i=>rows.push([`防具 ${this.equipNowHtml(i)} ${this.enhancedName(i)} / 防御+${this.itemPower(i)}<br>${i.desc}`,'armor',()=>{this.armor=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.inventory_accessories.forEach(i=>rows.push([`装飾 ${this.equipNowHtml(i)} ${this.enhancedName(i)} / ${i.effect}<br>${i.desc}`,'ring',()=>{this.accessory=i;this.closeModal();this.log(`${this.enhancedName(i)}を装備した。`);this.drawAll()}]));this.openModal('装備',rows,'閉じる')}
  saveGame(){let keys=['floor','level','exp','next_exp','max_hp','hp','atk_base','def_base','special','player_direction','gold','potions','bombs','smokes','weapon','armor','accessory','inventory_weapons','inventory_armors','inventory_accessories'];let data={};keys.forEach(k=>data[k]=this[k]);localStorage.setItem(SAVE_KEY,JSON.stringify(data));this.log('セーブしました。');this.drawAll()}
  loadGame(){let raw=localStorage.getItem(SAVE_KEY);if(!raw){alert('セーブデータがありません。');return}Object.assign(this,JSON.parse(raw));this.in_battle=false;this.in_shop=false;this.enemy=null;this.game_cleared=false;this.screen_mode='game';this.newFloor();this.log('ロードしました。');this.drawAll()}
  submitPassword(){let p=(this.passwordInput?.value||'').trim();if(p===PASSWORD){sessionStorage.setItem('exio_pw_ok','1');this.passwordOk=true;this.screen_mode='title';if(this.passwordInput)this.passwordInput.value='';this.drawAll()}else{if(this.passwordError)this.passwordError.textContent='パスワードが違います。';if(this.passwordInput){this.passwordInput.select();this.passwordInput.focus();}}}
