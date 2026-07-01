@@ -200,7 +200,6 @@ data.saved_at=Date.now();
 localStorage.setItem(SAVE_KEY,JSON.stringify(data));
 this.log('セーブしました。');
 this.drawAll()}
-
  noSaveData(){
 this.modal.hidden=false;
 this.modal.innerHTML=`<h2>確認</h2><div class="confirmQuestion" style="text-align:center;margin:28px 0 34px;">セーブデータがありません。</div>`;
@@ -215,11 +214,25 @@ this.modal.appendChild(acts)
 
  loadGame(){
 let raw=localStorage.getItem(SAVE_KEY);
-if(!raw){this.noSaveData();return}
+if(!raw){
+  this.noSaveData();
+  return;
+}
+
 let data;
-try{data=JSON.parse(raw)}catch(e){localStorage.removeItem(SAVE_KEY);this.noSaveData();return}
+try{
+  data=JSON.parse(raw);
+}catch(e){
+  localStorage.removeItem(SAVE_KEY);
+  this.noSaveData();
+  return;
+}
+
+// 現在状態を一度安全に初期化してから、セーブ内容を復元する。
+// ただし、この後 newFloor() は呼ばない。
 this.initState();
 Object.assign(this,data);
+
 this.in_battle=false;
 this.in_shop=false;
 this.shop_confirm=null;
@@ -238,17 +251,18 @@ this.enemy_defending=false;
 this.game_cleared=false;
 this.screen_mode='game';
 
-// 古いセーブデータ対策：マップ情報がない場合だけ、その階を再生成
-if(!this.map||!this.stairs||!this.player){
-  if(!this.floor)this.floor=1;
-  this.newFloor();
-  this.log('古いセーブデータを読み込みました。現在階を再生成しました。');
+// 現行セーブなら、保存したマップ・敵・宝箱・階段・ショップ・位置をそのまま使う。
+if(this.map && this.stairs && this.player){
+  this.log('ロードしました。');
+  this.drawAll();
   return;
 }
 
-this.log('ロードしました。');
-this.drawAll()}
-
+// 旧セーブだけ救済。旧セーブはマップ保存がないので現在階を再生成する。
+if(!this.floor)this.floor=1;
+this.newFloor();
+this.log('古いセーブデータを読み込みました。現在階を再生成しました。');
+}
  confirmQuitToTitle(){
 this.modal.hidden=false;
 this.modal.innerHTML=`<h2>確認</h2><div class="confirmQuestion" style="text-align:center;margin:24px 0 30px;">タイトルに戻りますが<br>よろしいですか？</div>`;
@@ -275,7 +289,23 @@ this.title_index=0;
 this.log('');
 this.drawAll()}
  submitPassword(){let p=(this.passwordInput?.value||'').trim();if(p===PASSWORD){sessionStorage.setItem('exio_pw_ok','1');this.passwordOk=true;this.screen_mode='title';if(this.passwordInput)this.passwordInput.value='';this.drawAll()}else{if(this.passwordError)this.passwordError.textContent='パスワードが違います。';if(this.passwordInput){this.passwordInput.select();this.passwordInput.focus();}}}
- titleConfirm(){if(this.screen_mode==='password'){this.submitPassword();return}if(this.title_index===0){this.initState();this.newFloor();this.screen_mode='opening';this.opening_index=0;this.drawAll()}else this.loadGame()}
+ titleConfirm(){
+   if(this.screen_mode==='password'){
+     this.submitPassword();
+     return;
+   }
+
+   if(this.title_index===1){
+     this.loadGame();
+     return;
+   }
+
+   this.initState();
+   this.newFloor();
+   this.screen_mode='opening';
+   this.opening_index=0;
+   this.drawAll();
+ }
  advanceOpening(){this.opening_index++;if(this.opening_index>=4){this.fade(()=>{this.screen_mode='game';this.log('ラーズビル攻略開始。最上階を目指せ。')},this.floorName(),'探索開始',420);return}this.drawAll()}
  startBossEvent(texts,next){this.event_texts=texts;this.event_index=0;this.event_next=next;this.screen_mode='boss_event';this.drawAll()} advanceBossEvent(){this.event_index++;if(this.event_index>=this.event_texts.length){let n=this.event_next;this.event_next=null;this.fade(()=>n&&n(),'', '',320);return}this.drawAll()} startIdeBattle(){this.screen_mode='game';let e=this.createEnemy({id:'ide',name:'社長イデラン',hp:220,atk:26,boss:true},this.player);this.setupBattle(e);this.log(`${e.name}が現れた！\n戦闘開始。\nカワグチくんのターン。`)} startIde2Event(){this.startBossEvent(['なかなかやるな。\n\nだが、これで私に勝てたと\n思うなよ。','私の本当の姿を\n見せてやろう！'],()=>this.startIde2Battle())} startIde2Battle(){this.screen_mode='game';let e=this.createEnemy({id:'ide2',name:'真・魔王イデラン',hp:320,atk:32,boss:true},this.player);this.setupBattle(e);this.log(`${e.name}が現れた！\n戦闘開始。\nカワグチくんのターン。`)} showEnding(){this.fade(()=>{this.in_battle=false;this.in_shop=false;this.enemy=null;this.game_cleared=true;this.screen_mode='ending'},'', '',360)}
  leftKey(){if(this.in_shop)return;if(this.screen_mode==='title')return;if(this.in_battle)return;this.move(-1,0)} rightKey(){if(this.screen_mode==='title')return;if(this.in_battle)return;this.move(1,0)} enterKey(){if(this.screen_mode==='password'||this.screen_mode==='title')return this.titleConfirm();if(this.screen_mode==='opening')return this.advanceOpening();if(this.screen_mode==='boss_event')return this.advanceBossEvent();if(this.screen_mode==='gameover'||this.screen_mode==='ending'){this.screen_mode='title';this.drawAll();return}} escKey(){if(this.in_shop){this.in_shop=false;this.drawAll()}}
@@ -286,7 +316,32 @@ this.drawAll()}
      (e.clientY-r.top)*(this.canvas.height/r.height)
    ];
  }
- canvasClick(e){if(this.screen_mode==='password')return this.titleConfirm();if(this.screen_mode==='title'){let [x,y]=this.canvasPoint(e);if(y>=632&&y<=690)this.title_index=1;else if(y>=585&&y<632)this.title_index=0;return this.titleConfirm();}if(this.screen_mode==='opening')return this.advanceOpening();if(this.screen_mode==='boss_event')return this.advanceBossEvent();if(this.screen_mode==='gameover'||this.screen_mode==='ending'){this.screen_mode='title';this.drawAll()}}
+ canvasClick(e){
+   if(this.screen_mode==='password')return this.titleConfirm();
+
+   if(this.screen_mode==='title'){
+     const [x,y]=this.canvasPoint(e);
+
+     // タイトル画面の選択肢は 610px と 656px 付近。
+     // スマホの拡大縮小差を吸収するため、かなり広めに判定する。
+     if(y>=635){
+       this.title_index=1; // つづきから
+     }else{
+       this.title_index=0; // はじめから
+     }
+
+     this.drawAll();
+     return this.titleConfirm();
+   }
+
+   if(this.screen_mode==='opening')return this.advanceOpening();
+   if(this.screen_mode==='boss_event')return this.advanceBossEvent();
+   if(this.screen_mode==='gameover'||this.screen_mode==='ending'){
+     this.screen_mode='title';
+     this.title_index=0;
+     this.drawAll();
+   }
+ }
  openModal(title,rows,closeLabel){this.modal.hidden=false;this.modal.innerHTML=`<h2>${title}</h2>`;rows.forEach(([text,icon,fn])=>{let b=document.createElement('button');b.className='rowBtn';b.innerHTML=`${this.assets[icon]?`<img src="${assetPath(icon)}">`:''}<span>${text}</span>`;b.onclick=fn;this.modal.appendChild(b)});let acts=document.createElement('div');acts.className='modalActions';let close=document.createElement('button');close.textContent=closeLabel||'閉じる';close.onclick=()=>this.closeModal();acts.appendChild(close);this.modal.appendChild(acts)} closeModal(){this.modal.hidden=true;this.modal.innerHTML=''}
  fade(action,title='',sub='',hold=260){return new Promise(res=>{document.getElementById('fadeTitle').textContent=title;document.getElementById('fadeSub').textContent=sub;this.fadeEl.hidden=false;requestAnimationFrame(()=>{this.fadeEl.style.opacity='1';setTimeout(()=>{if(action)action();this.drawAll();this.fadeEl.style.opacity='0';setTimeout(()=>{this.fadeEl.hidden=true;res()},520)},hold+520)})})}
 }
