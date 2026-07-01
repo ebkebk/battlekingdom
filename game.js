@@ -172,7 +172,7 @@ useSmoke(){if(this.smokes<=0||this.enemy?.boss)return;this.closeModal();this.smo
    const comp=(kind==='weapon'||kind==='armor'||kind==='accessory')?this.compareHtml(item,kind,mode):'';
    this.modal.hidden=false;
    this.modal.innerHTML=`<h2>${title}</h2><div class="confirmTop">${this.assets[icon]?`<img src="${assetPath(icon)}">`:''}<div class="confirmQuestion">${question.replace(/\n/g,'<br>')}</div></div><div class="descBox"><b>説明</b><br>${desc}</div>${comp?`<div class="compareBox">${comp}</div>`:''}<div class="moneyLine">所持金：${this.gold}G</div>`;
-   let acts=document.createElement('div');acts.className='modalActions';let yes=document.createElement('button');yes.textContent='はい';yes.onclick=onYes;let no=document.createElement('button');no.textContent='いいえ';no.onclick=()=>this.closeModal();acts.append(yes,no);this.modal.appendChild(acts)
+   let acts=document.createElement('div');acts.className='modalActions';let yes=document.createElement('button');yes.textContent='はい';yes.onclick=onYes;let no=document.createElement('button');no.textContent='戻る';no.onclick=()=>this.closeModal();acts.append(yes,no);this.modal.appendChild(acts)
  }
  notEnough(){this.modal.hidden=false;this.modal.innerHTML=`<h2>確認</h2><div class="confirmTop"><img src="${assetPath('gold')}"><div class="confirmQuestion">お金が足りない。</div></div><div class="modalActions"><button id="neBack">戻る</button></div>`;this.modal.querySelector('#neBack').onclick=()=>this.closeModal()}
  confirmBuyConsumable(name,kind,price){this.confirmShop('購入確認',name,kind,price,()=>this.buyConsumable(kind,price,name),'buy')}
